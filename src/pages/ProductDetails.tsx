@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
-import { ShoppingCart, ArrowLeft, Star, ShieldCheck, Utensils, Truck } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Star, ShieldCheck, Utensils, Truck, Package } from 'lucide-react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 
@@ -95,10 +95,20 @@ const ProductDetails: React.FC = () => {
           className="relative rounded-[3rem] overflow-hidden shadow-2xl border border-brand-100 aspect-square"
         >
           <img
-            src={product.image}
+            src={product.image || '/images/products/veg_default.png'}
             alt={product.name}
             className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              const category = product.category.toLowerCase();
+              if (category.includes('non') || category.includes('nv')) {
+                target.src = '/images/products/nv_default.png';
+              } else if (category.includes('podi')) {
+                target.src = '/images/products/podi_default.png';
+              } else {
+                target.src = '/images/products/veg_default.png';
+              }
+            }}
           />
           <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-brand-700 font-bold text-sm shadow-sm">
             {product.category}
@@ -122,7 +132,9 @@ const ProductDetails: React.FC = () => {
           <div className="space-y-6 pt-6 border-t border-brand-100">
             {/* Size Selector */}
             <div className="space-y-4">
-              <label className="text-sm font-bold text-brand-900 ml-1 uppercase tracking-widest text-orange-600">Select Size Chart</label>
+              <label className="text-sm font-black text-orange-600 ml-1 uppercase tracking-[0.2em] flex items-center">
+                <Package size={18} className="mr-2" /> Select Pack Size
+              </label>
               <div className="flex flex-wrap gap-4">
                 {(product.sizes && product.sizes.length > 0 ? product.sizes : [{ label: 'Standard', price: (product as any).price || 0 }]).map((size) => (
                   <button

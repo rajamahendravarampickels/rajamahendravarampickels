@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, where, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, setDoc, doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { Order } from '../types';
@@ -28,26 +28,26 @@ const Profile: React.FC = () => {
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return;
-      try {
-        const ordersRef = collection(db, 'orders');
-        const q = query(ordersRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const ordersData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Order[];
-        setOrders(ordersData);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!user) return;
+    
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Order[];
+      setOrders(ordersData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders:", error);
+      setLoading(false);
+    });
 
-    fetchOrders();
+    return () => unsubscribe();
   }, [user]);
+
 
   useEffect(() => {
     if (profile) {
@@ -65,7 +65,16 @@ const Profile: React.FC = () => {
     
     setUpdating(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), editForm);
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          name: editForm.name,
+          email: user.email,
+          phone: editForm.phone,
+          address: editForm.address,
+        },
+        { merge: true }
+      );
       toast.success('Profile updated successfully!');
       setShowEditModal(false);
       // Wait a bit and reload or rely on AuthContext if it listener
@@ -81,6 +90,7 @@ const Profile: React.FC = () => {
     switch (status) {
       case 'delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'shipped': return 'bg-sky-100 text-sky-700 border-sky-200';
+      case 'confirmed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'processing': return 'bg-amber-100 text-amber-700 border-amber-200';
       default: return 'bg-orange-100 text-orange-700 border-orange-200';
     }
@@ -235,15 +245,20 @@ const Profile: React.FC = () => {
                         <Calendar size={24} />
                       </div>
                       <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Member Since</p>
-                      <h3 className="text-2xl font-black text-gray-900 mt-1">March 2026</h3>
+                      <h3 className="text-2xl font-black text-gray-900 mt-1">
+                        {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : 'Recently'}
+                      </h3>
                     </div>
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                       <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl inline-block mb-4">
                         <Package size={24} />
                       </div>
                       <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Total Savours</p>
-                      <h3 className="text-2xl font-black text-gray-900 mt-1">12 Pickles</h3>
+                      <h3 className="text-2xl font-black text-gray-900 mt-1">
+                        {orders.reduce((acc, order) => acc + (order.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0), 0)} Items
+                      </h3>
                     </div>
+
                   </div>
 
                   <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8">
@@ -334,10 +349,12 @@ const Profile: React.FC = () => {
                             <div className="flex items-center space-x-8">
                               <div className="text-right">
                                 <p className="text-[10px] font-black uppercase tracking-tighter text-gray-400">Amount</p>
-                                <p className="text-xl font-black text-orange-600">₹{order.total}</p>
+                                <p className="text-xl font-black text-orange-600">₹{order.totalPrice || order.total}</p>
                               </div>
-                              <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${getStatusStyles(order.status)}`}>
-                                {order.status}
+                              <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${getStatusStyles(order.orderStatus)}`}>
+                                {order.orderStatus === 'pending' ? 'Waiting for Confirmation' : 
+                                 order.orderStatus === 'confirmed' ? 'Confirmed' : 
+                                 order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
                               </span>
                               <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-orange-600 hover:text-white transition-all shadow-sm">
                                 <ChevronRight size={18} />

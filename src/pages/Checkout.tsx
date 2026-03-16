@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, serverTimestamp, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, setDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { MapPin, Phone, User, CreditCard, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import upiQr from '../assets/upi-qr.jpg';
 
 const Checkout: React.FC = () => {
   const { items, total, clearCart } = useCart();
@@ -14,11 +15,25 @@ const Checkout: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: profile?.name || '',
-    phone: '',
+    phone: profile?.phone || '',
     address: profile?.address || '',
-    city: '',
-    pincode: ''
+    city: profile?.city || '',
+    pincode: profile?.pincode || '',
+    paymentMethod: 'COD' as 'COD' | 'UPI'
   });
+
+  React.useEffect(() => {
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || profile.name || '',
+        phone: prev.phone || profile.phone || '',
+        address: prev.address || profile.address || '',
+        city: prev.city || (profile as any).city || '',
+        pincode: prev.pincode || (profile as any).pincode || ''
+      }));
+    }
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,35 +45,50 @@ const Checkout: React.FC = () => {
 
     setLoading(true);
     try {
+      const ordersRef = collection(db, 'orders');
+      const newOrderDoc = doc(ordersRef);
+      const orderId = newOrderDoc.id;
+
       const orderData = {
+        orderId,
         userId: user.uid,
         items,
         total,
-        address: `${formData.address}, ${formData.city} - ${formData.pincode}`,
+        totalPrice: total,
+        name: formData.name,
         phone: formData.phone,
-        status: 'pending',
+        address: formData.address,
+        city: formData.city,
+        pincode: formData.pincode,
+        paymentMethod: formData.paymentMethod,
+        paymentStatus: 'pending',
+        orderStatus: 'pending',
         createdAt: serverTimestamp()
       };
 
-      await addDoc(collection(db, 'orders'), orderData);
+      await setDoc(newOrderDoc, orderData);
       
-      // Update user profile with latest shipping info if it's missing or if we want to keep it updated
+      // Update user profile with latest shipping info
       if (user) {
-        await updateDoc(doc(db, 'users', user.uid), {
+        await setDoc(doc(db, 'users', user.uid), {
           address: formData.address,
           phone: formData.phone,
-          name: formData.name
-        });
+          name: formData.name,
+          email: user.email,
+          city: formData.city,
+          pincode: formData.pincode
+        }, { merge: true });
       }
 
       toast.success('Order placed successfully!');
       clearCart();
-      navigate('/profile');
+      navigate('/orders');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
@@ -130,16 +160,79 @@ const Checkout: React.FC = () => {
               <h2 className="text-2xl font-serif font-bold text-brand-900 mb-8 flex items-center">
                 <CreditCard className="mr-3 text-brand-500" /> Payment Method
               </h2>
-              <div className="p-6 border-2 border-brand-500 bg-brand-50 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center">
-                  <CheckCircle className="text-brand-600 mr-4" />
-                  <div>
-                    <p className="font-bold text-brand-900">Cash on Delivery</p>
-                    <p className="text-sm text-brand-600">Pay when you receive your pickles</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, paymentMethod: 'UPI' })}
+                  className={`p-6 border-2 rounded-3xl flex items-center justify-between transition-all ${
+                    formData.paymentMethod === 'UPI' 
+                    ? 'border-brand-500 bg-brand-50' 
+                    : 'border-brand-100 hover:border-brand-200'
+                  }`}
+                >
+                  <div className="flex items-center text-left">
+                    <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                      formData.paymentMethod === 'UPI' ? 'border-brand-500 bg-brand-500' : 'border-brand-200'
+                    }`}>
+                      {formData.paymentMethod === 'UPI' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-brand-900">Online Payment</p>
+                      <p className="text-xs text-brand-600">UPI, QR Code Scan</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, paymentMethod: 'COD' })}
+                  className={`p-6 border-2 rounded-3xl flex items-center justify-between transition-all ${
+                    formData.paymentMethod === 'COD' 
+                    ? 'border-brand-500 bg-brand-50' 
+                    : 'border-brand-100 hover:border-brand-200'
+                  }`}
+                >
+                  <div className="flex items-center text-left">
+                    <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                      formData.paymentMethod === 'COD' ? 'border-brand-500 bg-brand-500' : 'border-brand-200'
+                    }`}>
+                      {formData.paymentMethod === 'COD' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-brand-900">Cash on Delivery</p>
+                      <p className="text-xs text-brand-600">Pay at delivery</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {formData.paymentMethod === 'UPI' && (
+                <div className="bg-brand-50 p-8 rounded-[2.5rem] border border-brand-100 space-y-6">
+                  <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-brand-100">
+                      <img 
+                        src={upiQr} 
+                        alt="UPI QR Code" 
+                        className="w-48 h-48 object-contain"
+                      />
+                    </div>
+                    <div className="space-y-4 text-center md:text-left">
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-brand-400 tracking-widest mb-1">UPI ID</p>
+                        <p className="font-bold text-brand-900 text-lg">sailakshmisaripuru-3@okhdfcbank</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-brand-400 tracking-widest mb-1">Email</p>
+                        <p className="font-medium text-brand-700">rajamehendravarampickles@gmail.com</p>
+                      </div>
+                      <div className="bg-white/50 p-4 rounded-2xl border border-brand-100">
+                        <p className="text-sm font-bold text-brand-900">Instructions:</p>
+                        <p className="text-sm text-brand-600">Scan QR and pay. After payment click Confirm Order.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <span className="text-brand-600 font-bold">FREE</span>
-              </div>
+              )}
             </div>
           </form>
         </div>

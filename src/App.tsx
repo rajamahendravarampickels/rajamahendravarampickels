@@ -12,6 +12,7 @@ import Auth from './pages/Auth';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
+import MyOrders from './pages/MyOrders';
 import AdminPanel from './pages/AdminPanel';
 import { ProductProvider } from './context/ProductContext';
 
@@ -32,6 +33,7 @@ export default function App() {
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/orders" element={<MyOrders />} />
                   <Route path="/admin" element={<AdminPanel />} />
                 </Routes>
               </main>

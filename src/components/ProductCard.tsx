@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
-import { ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface ProductCardProps {
@@ -28,18 +28,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Link to={`/product/${product.id}`} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 ease-in-out border border-gray-100 hover:border-orange-200 flex flex-col h-full group hover:scale-[1.02] hover:-translate-y-1">
       {/* Product Image */}
       <div className="aspect-square bg-gray-50 flex items-center justify-center relative overflow-hidden">
-        {product.image ? (
-          <img 
-            src={product.image} 
-            alt={product.name}
-            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <span className="text-gray-300 text-[10px] font-black uppercase tracking-widest italic">
-            Zesty Pickle
-          </span>
-        )}
+        <img 
+          src={product.image || '/images/products/veg_default.png'} 
+          alt={product.name}
+          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            const category = product.category.toLowerCase();
+            if (category.includes('non') || category.includes('nv')) {
+              target.src = '/images/products/nv_default.png';
+            } else if (category.includes('podi')) {
+              target.src = '/images/products/podi_default.png';
+            } else {
+              target.src = '/images/products/veg_default.png';
+            }
+          }}
+        />
         <div className="absolute top-3 left-3 z-10">
           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getBadgeColor(product.category)} shadow-sm`}>
             {product.category}
@@ -57,9 +62,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Size Selector */}
           <div className="flex flex-col space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Select Size Chart</label>
+              <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center">
+                <Package size={12} className="mr-1" /> Select Weight
+              </label>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {availableSizes.map((size) => (
                 <button
                   key={size.label}

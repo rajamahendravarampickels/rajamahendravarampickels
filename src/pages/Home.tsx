@@ -11,9 +11,9 @@ const Home: React.FC = () => {
   const { products: featuredProducts, loading } = useProducts();
 
   const categories = [
-    { name: 'Veg', label: 'Veg', icon: '🥗', count: featuredProducts.filter(p => p.category === 'Veg').length },
-    { name: 'NV pickles', label: 'Non-Veg', icon: '🍖', count: featuredProducts.filter(p => p.category === 'NV pickles').length },
-    { name: 'podis', label: 'Podis', icon: '🌶️', count: featuredProducts.filter(p => p.category === 'podis').length },
+    { name: 'veg', label: 'Veg', icon: '🥗', count: featuredProducts.filter(p => p.category === 'veg').length },
+    { name: 'nonveg', label: 'Non-Veg', icon: '🍖', count: featuredProducts.filter(p => p.category === 'nonveg').length },
+    { name: 'podi', label: 'Podis', icon: '🌶️', count: featuredProducts.filter(p => p.category === 'podi').length },
   ];
 
   return (
@@ -22,12 +22,11 @@ const Home: React.FC = () => {
       <section className="relative h-[85vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1621841957884-1210fe19d66d?auto=format&fit=crop&q=80&w=1920"
+            src="/images/products/v1.png"
             alt="Pickle Background"
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover blur-[2px]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-900/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-900/90 to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
@@ -112,19 +111,19 @@ const Home: React.FC = () => {
       {/* Product Sections */}
       <section className="space-y-24">
         {/* Veg Section */}
-        {featuredProducts.filter(p => p.category === 'Veg').length > 0 && (
+        {featuredProducts.filter(p => p.category === 'veg').length > 0 && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-end mb-12 border-b border-brand-100 pb-6">
               <div>
                 <h2 className="text-4xl font-serif font-bold text-brand-900 mb-2">VEG</h2>
                 <p className="text-brand-600 italic font-medium">Traditional vegetarian delicacies</p>
               </div>
-              <Link to="/products?category=Veg" className="bg-brand-50 text-brand-600 px-6 py-2 rounded-full font-bold hover:bg-brand-600 hover:text-white transition-all text-sm border border-brand-200">
+              <Link to="/products?category=veg" className="bg-brand-50 text-brand-600 px-6 py-2 rounded-full font-bold hover:bg-brand-600 hover:text-white transition-all text-sm border border-brand-200">
                 View All
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.filter(p => p.category === 'Veg').slice(0, 4).map((product) => (
+              {featuredProducts.filter(p => p.category === 'veg').slice(0, 4).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -132,7 +131,7 @@ const Home: React.FC = () => {
         )}
 
         {/* NV Section */}
-        {featuredProducts.filter(p => p.category === 'NV pickles').length > 0 && (
+        {featuredProducts.filter(p => p.category === 'nonveg').length > 0 && (
           <div className="bg-brand-50/50 py-24 border-y border-brand-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-end mb-12 border-b border-brand-200 pb-6">
@@ -140,12 +139,12 @@ const Home: React.FC = () => {
                   <h2 className="text-4xl font-serif font-bold text-brand-900 mb-2 font-uppercase">NON VEG SECTION</h2>
                   <p className="text-brand-600 italic font-medium">Spicy and authentic meat pickles</p>
                 </div>
-                <Link to="/products?category=NV pickles" className="bg-brand-600 text-white px-6 py-2 rounded-full font-bold hover:bg-brand-700 transition-all text-sm shadow-md">
+                <Link to="/products?category=nonveg" className="bg-brand-600 text-white px-6 py-2 rounded-full font-bold hover:bg-brand-700 transition-all text-sm shadow-md">
                   View All
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {featuredProducts.filter(p => p.category === 'NV pickles').slice(0, 4).map((product) => (
+                {featuredProducts.filter(p => p.category === 'nonveg').slice(0, 4).map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
@@ -154,19 +153,19 @@ const Home: React.FC = () => {
         )}
 
         {/* Podis Section */}
-        {featuredProducts.filter(p => p.category === 'podis').length > 0 && (
+        {featuredProducts.filter(p => p.category === 'podi').length > 0 && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-end mb-12 border-b border-brand-100 pb-6">
               <div>
                 <h2 className="text-4xl font-serif font-bold text-brand-900 mb-2">PODIES SECTION</h2>
                 <p className="text-brand-600 italic font-medium">Homemade spice powders and pastes</p>
               </div>
-              <Link to="/products?category=podis" className="bg-brand-50 text-brand-600 px-6 py-2 rounded-full font-bold hover:bg-brand-600 hover:text-white transition-all text-sm border border-brand-200">
+              <Link to="/products?category=podi" className="bg-brand-50 text-brand-600 px-6 py-2 rounded-full font-bold hover:bg-brand-600 hover:text-white transition-all text-sm border border-brand-200">
                 View All
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.filter(p => p.category === 'podis').slice(0, 4).map((product) => (
+              {featuredProducts.filter(p => p.category === 'podi').slice(0, 4).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -176,29 +175,7 @@ const Home: React.FC = () => {
 
 
 
-      {/* Testimonials */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-brand-900 rounded-[3rem] p-12 md:p-20 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-12 opacity-10">
-            <Utensils size={200} />
-          </div>
-          <div className="relative z-10 max-w-3xl">
-            <div className="flex space-x-1 mb-8">
-              {[...Array(5)].map((_, i) => <Star key={i} size={24} className="fill-brand-400 text-brand-400" />)}
-            </div>
-            <h2 className="text-3xl md:text-5xl font-serif italic mb-8 leading-tight">
-              "The Avakaya pickle took me straight back to my grandmother's kitchen. The authenticity is unmatched!"
-            </h2>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-full bg-brand-700 flex items-center justify-center text-2xl font-bold">P</div>
-              <div>
-                <p className="font-bold text-xl">Priya Sharma</p>
-                <p className="text-brand-400">Verified Customer</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
     </div>
   );
 };

@@ -32,6 +32,9 @@ const Navbar: React.FC = () => {
             {isAdmin && (
               <Link to="/admin" className="text-brand-900 hover:text-brand-600 font-medium">Admin</Link>
             )}
+            {user && (
+              <Link to="/orders" className="text-brand-900 hover:text-brand-600 font-medium">Orders</Link>
+            )}
             <div className="flex items-center space-x-4 border-l border-brand-200 pl-8">
               <Link to="/cart" className="relative p-2 text-brand-900 hover:text-brand-600">
                 <ShoppingCart size={24} />
@@ -83,6 +86,9 @@ const Navbar: React.FC = () => {
             <Link to="/products" className="block px-3 py-2 text-brand-900 font-medium">Shop</Link>
             {isAdmin && (
               <Link to="/admin" className="block px-3 py-2 text-brand-900 font-medium">Admin</Link>
+            )}
+            {user && (
+              <Link to="/orders" className="block px-3 py-2 text-brand-900 font-medium">Orders</Link>
             )}
             {user ? (
               <>

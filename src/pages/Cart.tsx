@@ -45,10 +45,20 @@ const Cart: React.FC = () => {
                 className="bg-white p-6 rounded-3xl border border-brand-100 shadow-sm flex flex-col sm:flex-row items-center gap-6"
               >
                 <img
-                  src={item.image}
+                  src={item.image || '/images/products/veg_default.png'}
                   alt={item.name}
                   className="w-32 h-32 object-cover rounded-2xl"
-                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    const category = item.category.toLowerCase();
+                    if (category.includes('non') || category.includes('nv')) {
+                      target.src = '/images/products/nv_default.png';
+                    } else if (category.includes('podi')) {
+                      target.src = '/images/products/podi_default.png';
+                    } else {
+                      target.src = '/images/products/veg_default.png';
+                    }
+                  }}
                 />
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="text-xl font-serif font-bold text-brand-900 mb-1">{item.name}</h3>

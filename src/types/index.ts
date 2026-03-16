@@ -33,15 +33,20 @@ export interface CartItem {
 
 export interface Order {
   id: string;
+  orderId: string;
   userId: string;
-  name?: string;
+  name: string;
   items: CartItem[];
   total: number;
-  totalPrice?: number;
+  totalPrice: number;
   address: string;
-  city?: string;
-  pincode?: string;
+  city: string;
+  pincode: string;
   phone: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered';
+  orderStatus: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'processing';
+  paymentMethod: 'UPI' | 'COD';
+  paymentStatus: 'pending' | 'confirmed';
+  paymentInfo?: string;
   createdAt: any;
 }
+
