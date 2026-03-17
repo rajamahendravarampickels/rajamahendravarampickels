@@ -92,14 +92,14 @@ const Checkout: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-serif font-bold text-brand-900 mb-12">Checkout</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-brand-900 mb-8 sm:mb-12">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="bg-white p-8 rounded-[2.5rem] border border-brand-100 shadow-sm">
-              <h2 className="text-2xl font-serif font-bold text-brand-900 mb-8 flex items-center">
+            <div className="bg-white p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-brand-100 shadow-sm">
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-brand-900 mb-6 sm:mb-8 flex items-center">
                 <User className="mr-3 text-brand-500" /> Shipping Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -156,8 +156,8 @@ const Checkout: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] border border-brand-100 shadow-sm">
-              <h2 className="text-2xl font-serif font-bold text-brand-900 mb-8 flex items-center">
+            <div className="bg-white p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-brand-100 shadow-sm">
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-brand-900 mb-6 sm:mb-8 flex items-center">
                 <CreditCard className="mr-3 text-brand-500" /> Payment Method
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -207,8 +207,8 @@ const Checkout: React.FC = () => {
               </div>
 
               {formData.paymentMethod === 'UPI' && (
-                <div className="bg-brand-50 p-8 rounded-[2.5rem] border border-brand-100 space-y-6">
-                  <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="bg-brand-50 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-brand-100 space-y-6">
+                  <div className="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
                     <div className="bg-white p-4 rounded-3xl shadow-sm border border-brand-100">
                       <img 
                         src={upiQr} 
@@ -238,8 +238,8 @@ const Checkout: React.FC = () => {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-white p-8 rounded-[2.5rem] border border-brand-100 shadow-sm sticky top-24">
-            <h2 className="text-2xl font-serif font-bold text-brand-900 mb-8">Order Summary</h2>
+          <div className="bg-white p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-brand-100 shadow-sm sticky top-24">
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-brand-900 mb-6 sm:mb-8">Order Summary</h2>
             <div className="space-y-4 mb-8 max-h-64 overflow-y-auto pr-2">
               {items.map((item) => (
                 <div key={`${item.id}-${item.size}`} className="flex justify-between items-center text-sm">
