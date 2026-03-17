@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product, Order } from '../types';
 import { 
@@ -152,6 +152,30 @@ const AdminPanel: React.FC = () => {
       toast.success('Order deleted');
     } catch (error) {
       toast.error('Failed to delete order');
+    }
+  };
+  const handleClearAllOrders = async () => {
+    if (!window.confirm('CRITICAL WARNING: This will permanently delete ALL orders from the database. This action cannot be undone. Are you sure you want to start fresh?')) return;
+    
+    const password = window.prompt('Please type "DELETE" to confirm:');
+    if (password !== 'DELETE') {
+      toast.error('Deletions cancelled. Confirmation failed.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const batch = writeBatch(db);
+      orders.forEach((order) => {
+        batch.delete(doc(db, 'orders', order.id));
+      });
+      await batch.commit();
+      toast.success('All orders have been cleared. You are starting fresh!');
+    } catch (error) {
+      console.error('Error clearing orders:', error);
+      toast.error('Failed to clear all orders. Some might remain.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -325,12 +349,20 @@ const AdminPanel: React.FC = () => {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-serif font-bold text-brand-900">Order Management</h2>
-            <button
-              onClick={exportOrdersToExcel}
-              className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-            >
-              <FileDown size={20} className="mr-2" /> Download Orders Excel
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={handleClearAllOrders}
+                className="bg-red-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-red-700 transition-all shadow-lg shadow-red-100"
+              >
+                <Trash2 size={20} className="mr-2" /> Clear All Orders
+              </button>
+              <button
+                onClick={exportOrdersToExcel}
+                className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+              >
+                <FileDown size={20} className="mr-2" /> Download Orders Excel
+              </button>
+            </div>
           </div>
           <div className="bg-white rounded-3xl border border-brand-100 shadow-sm overflow-hidden">
             <table className="w-full text-left">
