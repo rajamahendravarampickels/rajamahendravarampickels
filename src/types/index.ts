@@ -44,7 +44,7 @@ export interface Order {
   pincode: string;
   phone: string;
   orderStatus: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'processing';
-  paymentMethod: 'UPI' | 'COD';
+  paymentMethod: 'UPI';
   paymentStatus: 'pending' | 'confirmed';
   paymentInfo?: string;
   createdAt: any;

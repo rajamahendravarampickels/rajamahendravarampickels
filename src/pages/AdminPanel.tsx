@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../lib/firebase';
 import { Product, Order, UserProfile } from '../types';
 import { 
   Plus, Trash2, Edit2, Package, ShoppingBag, 
@@ -26,17 +27,37 @@ const AdminPanel: React.FC = () => {
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'veg',
     description: '',
     image: '',
     sizes: [
-      { label: '200g', price: 0 },
-      { label: '400g', price: 0 },
-      { label: '900g', price: 0 }
+      { label: '250g', price: 0 },
+      { label: '500g', price: 0 },
+      { label: '1kg', price: 0 }
     ]
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setNewProduct(prev => ({ ...prev, image: url }));
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -71,74 +92,25 @@ const AdminPanel: React.FC = () => {
     };
   }, [isAdmin]);
 
-  const handleBulkImportNonVeg = async () => {
-    if (!window.confirm('Do you want to import/reset the Non-Veg Pickles list to the traditional menu (200g, 400g, 900g)?')) return;
-    
-    const nonVegData = [
-      { name: "Kodi Mamsam Pachadi B/L", prices: [343, 748, 1486], image: "/images/products/kodi mamsam pachadi.jpeg" },
-      { name: "Meka Mamsam Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/meka mamsam pachadi.jpeg" },
-      { name: "Royyalu Pachadi", prices: [487, 946, 1792], image: "/images/products/royyalu pachadi.jpeg" },
-      { name: "Gongura Kodi Mamsam Pachadi B/C", prices: [343, 748, 1486], image: "/images/products/gongura kodi mamsam pachadi.jpeg" },
-      { name: "Gongura Mekamamsam Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/gongura mutton pachadi.jpeg" },
-      { name: "Gongura Royyalu", prices: [487, 946, 1792], image: "/images/products/gongura royallu.jpeg" },
-      { name: "Chapala Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/chappala pachadi.jpeg" }
-    ];
+  // Removed hardcoded bulk import as requested (No manual coding/sample data)
 
-    setLoading(true);
-    try {
-      const batch = writeBatch(db);
-      
-      // Update or add these specific items
-      for (const item of nonVegData) {
-        const existing = products.find(p => p.name === item.name);
-        const sizes = [
-          { label: '200g', price: item.prices[0] },
-          { label: '400g', price: item.prices[1] },
-          { label: '900g', price: item.prices[2] }
-        ];
-
-        if (existing) {
-          batch.update(doc(db, 'products', existing.id), {
-            category: 'nonveg',
-            sizes,
-            image: item.image,
-            description: `Authentic homemade ${item.name} from Rajamahendravaram.`
-          });
-        } else {
-          const newDocRef = doc(collection(db, 'products'));
-          batch.set(newDocRef, {
-            name: item.name,
-            category: 'nonveg',
-            description: `Authentic homemade ${item.name} from Rajamahendravaram.`,
-            image: item.image,
-            sizes,
-            createdAt: serverTimestamp()
-          });
-        }
-      }
-      
-      await batch.commit();
-      toast.success('Non-Veg menu synchronized successfully!');
-    } catch (error) {
-      console.error('Import error:', error);
-      toast.error('Failed to sync non-veg menu');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const productData = {
-        ...newProduct,
-        createdAt: serverTimestamp()
+      const productData: any = {
+        name: newProduct.name,
+        category: newProduct.category,
+        description: newProduct.description,
+        image: newProduct.image,
+        sizes: newProduct.sizes,
       };
 
       if (editingProduct) {
-        await setDoc(doc(db, 'products', editingProduct.id), productData, { merge: true });
+        await updateDoc(doc(db, 'products', editingProduct.id), productData);
         toast.success('Product updated successfully!');
       } else {
+        productData.createdAt = serverTimestamp();
         await addDoc(collection(db, 'products'), productData);
         toast.success('Product added successfully!');
       }
@@ -334,12 +306,7 @@ const AdminPanel: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-2xl font-serif font-bold text-brand-900">Product Management</h2>
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleBulkImportNonVeg}
-                className="bg-brand-50 text-brand-600 px-5 py-3 rounded-2xl font-bold flex items-center hover:bg-brand-600 hover:text-white transition-all border border-brand-100"
-              >
-                <RefreshCw size={18} className="mr-2" /> Sync Non-Veg
-              </button>
+
               <button
                 onClick={() => setShowAddModal(true)}
                 className="bg-brand-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-brand-700 transition-all shadow-lg shadow-brand-100"
@@ -719,9 +686,9 @@ const AdminPanel: React.FC = () => {
                   description: '',
                   image: '',
                   sizes: [
-                    { label: '200g', price: 0 },
-                    { label: '400g', price: 0 },
-                    { label: '900g', price: 0 }
+                    { label: '250g', price: 0 },
+                    { label: '500g', price: 0 },
+                    { label: '1kg', price: 0 }
                   ]
                 });
               }} 
@@ -780,15 +747,39 @@ const AdminPanel: React.FC = () => {
               </div>
 
               <div className="md:col-span-2 space-y-2">
-                <label className="text-sm font-bold text-brand-700 ml-2">Image URL</label>
-                <input
-                  type="url"
-                  required
-                  value={newProduct.image}
-                  onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                  className="w-full px-4 py-3 bg-brand-50 border border-brand-100 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500"
-                  placeholder="https://images.unsplash.com/..."
-                />
+                <label className="text-sm font-bold text-brand-700 ml-2">Product Image (Upload or URL)</label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="product-image-upload"
+                    />
+                    <label 
+                      htmlFor="product-image-upload"
+                      className="w-full flex items-center justify-center px-4 py-3 bg-brand-50 border-2 border-dashed border-brand-200 rounded-2xl cursor-pointer hover:border-brand-500 transition-all text-brand-600 font-bold"
+                    >
+                      {uploading ? 'Uploading...' : 'Click to upload image'}
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newProduct.image}
+                      onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                      className="w-full px-4 py-3 bg-brand-50 border border-brand-100 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500"
+                      placeholder="Or paste Image URL"
+                    />
+                  </div>
+                </div>
+                {newProduct.image && (
+                  <div className="mt-2 flex items-center space-x-2 p-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <Check size={16} className="text-emerald-600" />
+                    <span className="text-xs text-emerald-700 font-medium truncate">{newProduct.image}</span>
+                  </div>
+                )}
               </div>
               <div className="md:col-span-2 space-y-2">
                 <label className="text-sm font-bold text-brand-700 ml-2">Description</label>

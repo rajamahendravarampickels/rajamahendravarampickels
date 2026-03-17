@@ -19,7 +19,7 @@ const Checkout: React.FC = () => {
     address: profile?.address || '',
     city: profile?.city || '',
     pincode: profile?.pincode || '',
-    paymentMethod: 'COD' as 'COD' | 'UPI'
+    paymentMethod: 'UPI' as const
   });
 
   React.useEffect(() => {
@@ -160,79 +160,31 @@ const Checkout: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-brand-900 mb-6 sm:mb-8 flex items-center">
                 <CreditCard className="mr-3 text-brand-500" /> Payment Method
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, paymentMethod: 'UPI' })}
-                  className={`p-6 border-2 rounded-3xl flex items-center justify-between transition-all ${
-                    formData.paymentMethod === 'UPI' 
-                    ? 'border-brand-500 bg-brand-50' 
-                    : 'border-brand-100 hover:border-brand-200'
-                  }`}
-                >
-                  <div className="flex items-center text-left">
-                    <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
-                      formData.paymentMethod === 'UPI' ? 'border-brand-500 bg-brand-500' : 'border-brand-200'
-                    }`}>
-                      {formData.paymentMethod === 'UPI' && <div className="w-2 h-2 rounded-full bg-white" />}
+              <div className="bg-brand-50 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-brand-100 space-y-6">
+                <div className="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
+                  <div className="bg-white p-4 rounded-3xl shadow-sm border border-brand-100">
+                    <img 
+                      src={upiQr} 
+                      alt="UPI QR Code" 
+                      className="w-48 h-48 object-contain"
+                    />
+                  </div>
+                  <div className="space-y-4 text-center md:text-left">
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-brand-400 tracking-widest mb-1">UPI ID</p>
+                      <p className="font-bold text-brand-900 text-lg">sailakshmisaripuru-3@okhdfcbank</p>
                     </div>
                     <div>
-                      <p className="font-bold text-brand-900">Online Payment</p>
-                      <p className="text-xs text-brand-600">UPI, QR Code Scan</p>
+                      <p className="text-[10px] font-black uppercase text-brand-400 tracking-widest mb-1">Email</p>
+                      <p className="font-medium text-brand-700">rajamehendravarampickles@gmail.com</p>
                     </div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, paymentMethod: 'COD' })}
-                  className={`p-6 border-2 rounded-3xl flex items-center justify-between transition-all ${
-                    formData.paymentMethod === 'COD' 
-                    ? 'border-brand-500 bg-brand-50' 
-                    : 'border-brand-100 hover:border-brand-200'
-                  }`}
-                >
-                  <div className="flex items-center text-left">
-                    <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
-                      formData.paymentMethod === 'COD' ? 'border-brand-500 bg-brand-500' : 'border-brand-200'
-                    }`}>
-                      {formData.paymentMethod === 'COD' && <div className="w-2 h-2 rounded-full bg-white" />}
-                    </div>
-                    <div>
-                      <p className="font-bold text-brand-900">Cash on Delivery</p>
-                      <p className="text-xs text-brand-600">Pay at delivery</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-
-              {formData.paymentMethod === 'UPI' && (
-                <div className="bg-brand-50 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-brand-100 space-y-6">
-                  <div className="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
-                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-brand-100">
-                      <img 
-                        src={upiQr} 
-                        alt="UPI QR Code" 
-                        className="w-48 h-48 object-contain"
-                      />
-                    </div>
-                    <div className="space-y-4 text-center md:text-left">
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-brand-400 tracking-widest mb-1">UPI ID</p>
-                        <p className="font-bold text-brand-900 text-lg">sailakshmisaripuru-3@okhdfcbank</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-brand-400 tracking-widest mb-1">Email</p>
-                        <p className="font-medium text-brand-700">rajamehendravarampickles@gmail.com</p>
-                      </div>
-                      <div className="bg-white/50 p-4 rounded-2xl border border-brand-100">
-                        <p className="text-sm font-bold text-brand-900">Instructions:</p>
-                        <p className="text-sm text-brand-600">Scan QR and pay. After payment click Confirm Order.</p>
-                      </div>
+                    <div className="bg-white/50 p-4 rounded-2xl border border-brand-100">
+                      <p className="text-sm font-bold text-brand-900">Instructions:</p>
+                      <p className="text-sm text-brand-600">Scan QR and pay. After payment click Confirm Order.</p>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </form>
         </div>
@@ -273,7 +225,7 @@ const Checkout: React.FC = () => {
               disabled={loading}
               className="w-full bg-brand-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-brand-700 transition-all flex items-center justify-center disabled:opacity-50"
             >
-              {loading ? 'Placing Order...' : 'Place Order Now'}
+              {loading ? 'Confirming Order...' : 'Confirm Order'}
             </button>
           </div>
         </div>
