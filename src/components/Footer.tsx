@@ -8,6 +8,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="space-y-4">
+            <img src="/badge.svg" alt="Badge" className="h-16 w-16 object-contain mb-2 brightness-0 invert" />
             <h3 className="text-2xl font-serif font-bold">Rajamahendravaram Pickles</h3>
             <p className="text-brand-200 text-sm leading-relaxed">
               Bringing you the authentic taste of tradition. Handcrafted with love, sun-dried, and preserved using age-old recipes.
@@ -40,11 +41,18 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-brand-200 text-sm">
               <li className="flex items-start space-x-3">
                 <MapPin size={18} className="mt-1 flex-shrink-0" />
-                <span>123 Spice Garden, Andhra Pradesh, India</span>
+                <span>
+                  42-13-5<br />
+                  Segidi Street, Beside Siva Gayatri Ramalayam<br />
+                  Mangavaripeta<br />
+                  Rajamahendravaram<br />
+                  East Godavari, Andhra Pradesh<br />
+                  533101
+                </span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={18} className="flex-shrink-0" />
-                <span>+91 98765 43210</span>
+                <span>+91 9502945153</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={18} className="flex-shrink-0" />

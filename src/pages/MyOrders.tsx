@@ -56,6 +56,7 @@ const MyOrders: React.FC = () => {
     switch (status) {
       case 'delivered': return <CheckCircle className="text-emerald-500" size={18} />;
       case 'shipped': return <Truck className="text-blue-500" size={18} />;
+      case 'processing': return <Package className="text-amber-500" size={18} />;
       case 'confirmed': return <CheckCircle className="text-brand-500" size={18} />;
       case 'pending': return <Clock className="text-amber-500" size={18} />;
       default: return <AlertCircle className="text-gray-400" size={18} />;

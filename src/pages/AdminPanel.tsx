@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Product, Order } from '../types';
+import { Product, Order, UserProfile } from '../types';
 import { 
   Plus, Trash2, Edit2, Package, ShoppingBag, 
-  Users, DollarSign, X, Check, FileDown 
+  Users, DollarSign, X, Check, FileDown, RefreshCw
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -25,15 +25,16 @@ const AdminPanel: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'veg',
     description: '',
     image: '',
     sizes: [
-      { label: '250g', price: 0 },
-      { label: '500g', price: 0 },
-      { label: '1kg', price: 0 }
+      { label: '200g', price: 0 },
+      { label: '400g', price: 0 },
+      { label: '900g', price: 0 }
     ]
   });
 
@@ -60,6 +61,7 @@ const AdminPanel: React.FC = () => {
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       setTotalUsers(snap.size);
+      setUsers(snap.docs.map(doc => ({ ...doc.data() })) as UserProfile[]);
     });
 
     return () => {
@@ -68,6 +70,62 @@ const AdminPanel: React.FC = () => {
       unsubUsers();
     };
   }, [isAdmin]);
+
+  const handleBulkImportNonVeg = async () => {
+    if (!window.confirm('Do you want to import/reset the Non-Veg Pickles list to the traditional menu (200g, 400g, 900g)?')) return;
+    
+    const nonVegData = [
+      { name: "Kodi Mamsam Pachadi B/L", prices: [343, 748, 1486], image: "/images/products/kodi mamsam pachadi.jpeg" },
+      { name: "Meka Mamsam Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/meka mamsam pachadi.jpeg" },
+      { name: "Royyalu Pachadi", prices: [487, 946, 1792], image: "/images/products/royyalu pachadi.jpeg" },
+      { name: "Gongura Kodi Mamsam Pachadi B/C", prices: [343, 748, 1486], image: "/images/products/gongura kodi mamsam pachadi.jpeg" },
+      { name: "Gongura Mekamamsam Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/gongura mutton pachadi.jpeg" },
+      { name: "Gongura Royyalu", prices: [487, 946, 1792], image: "/images/products/gongura royallu.jpeg" },
+      { name: "Chapala Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/chappala pachadi.jpeg" }
+    ];
+
+    setLoading(true);
+    try {
+      const batch = writeBatch(db);
+      
+      // Update or add these specific items
+      for (const item of nonVegData) {
+        const existing = products.find(p => p.name === item.name);
+        const sizes = [
+          { label: '200g', price: item.prices[0] },
+          { label: '400g', price: item.prices[1] },
+          { label: '900g', price: item.prices[2] }
+        ];
+
+        if (existing) {
+          batch.update(doc(db, 'products', existing.id), {
+            category: 'nonveg',
+            sizes,
+            image: item.image,
+            description: `Authentic homemade ${item.name} from Rajamahendravaram.`
+          });
+        } else {
+          const newDocRef = doc(collection(db, 'products'));
+          batch.set(newDocRef, {
+            name: item.name,
+            category: 'nonveg',
+            description: `Authentic homemade ${item.name} from Rajamahendravaram.`,
+            image: item.image,
+            sizes,
+            createdAt: serverTimestamp()
+          });
+        }
+      }
+      
+      await batch.commit();
+      toast.success('Non-Veg menu synchronized successfully!');
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Failed to sync non-veg menu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +192,7 @@ const AdminPanel: React.FC = () => {
       if (status === 'confirmed') {
         updates.paymentStatus = 'confirmed';
       }
-      await setDoc(doc(db, 'orders', orderId), updates, { merge: true });
+      await updateDoc(doc(db, 'orders', orderId), updates);
       if (selectedOrder?.id === orderId) {
         setSelectedOrder(prev => prev ? { ...prev, ...updates } : null);
       }
@@ -224,21 +282,18 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex justify-between items-center mb-12">
-        <h1 className="text-4xl font-serif font-bold text-brand-900">Admin Dashboard</h1>
-        <div className="flex bg-white p-1 rounded-2xl border border-brand-100">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`px-6 py-2 rounded-xl font-bold transition-all ${activeTab === 'products' ? 'bg-brand-600 text-white' : 'text-brand-600 hover:bg-brand-50'}`}
-          >
-            Products
-          </button>
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-6 py-2 rounded-xl font-bold transition-all ${activeTab === 'orders' ? 'bg-brand-600 text-white' : 'text-brand-600 hover:bg-brand-50'}`}
-          >
-            Orders
-          </button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+        <h1 className="text-4xl font-serif font-black text-brand-900 tracking-tight">Admin Dashboard</h1>
+        <div className="flex bg-white p-1.5 rounded-[1.5rem] border border-brand-100 shadow-sm overflow-x-auto max-w-full">
+          {(['products', 'orders', 'users'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-6 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === tab ? 'bg-brand-600 text-white shadow-lg shadow-brand-100' : 'text-brand-500 hover:bg-brand-50'}`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -276,13 +331,18 @@ const AdminPanel: React.FC = () => {
 
       {activeTab === 'products' ? (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-2xl font-serif font-bold text-brand-900">Product Management</h2>
-            <div className="flex gap-4">
-
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleBulkImportNonVeg}
+                className="bg-brand-50 text-brand-600 px-5 py-3 rounded-2xl font-bold flex items-center hover:bg-brand-600 hover:text-white transition-all border border-brand-100"
+              >
+                <RefreshCw size={18} className="mr-2" /> Sync Non-Veg
+              </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-brand-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-brand-700 transition-all shadow-lg shadow-brand-200"
+                className="bg-brand-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-brand-700 transition-all shadow-lg shadow-brand-100"
               >
                 <Plus size={20} className="mr-2" /> Add Product
               </button>
@@ -345,97 +405,145 @@ const AdminPanel: React.FC = () => {
             </table>
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'orders' ? (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-2xl font-serif font-bold text-brand-900">Order Management</h2>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleClearAllOrders}
-                className="bg-red-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-red-700 transition-all shadow-lg shadow-red-100"
+                className="bg-red-50 text-red-600 px-5 py-3 rounded-2xl font-bold flex items-center hover:bg-red-600 hover:text-white transition-all border border-red-100"
               >
-                <Trash2 size={20} className="mr-2" /> Clear All Orders
+                <Trash2 size={18} className="mr-2" /> Clear All
               </button>
               <button
                 onClick={exportOrdersToExcel}
                 className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
               >
-                <FileDown size={20} className="mr-2" /> Download Orders Excel
+                <FileDown size={20} className="mr-2" /> Download Excel
               </button>
             </div>
           </div>
-          <div className="bg-white rounded-3xl border border-brand-100 shadow-sm overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-brand-50 text-brand-900 font-bold">
-                <tr>
-                  <th className="px-6 py-4">Order ID</th>
-                  <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Items</th>
-                  <th className="px-6 py-4">Total</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-50">
-                {orders.map((order) => (
-                  <tr 
-                    key={order.id} 
-                    onClick={() => setSelectedOrder(order)}
-                    className="hover:bg-brand-50/30 transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4 font-bold text-brand-900">#{order.id.slice(0, 8)}</td>
-                    <td className="px-6 py-4 text-brand-600">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-brand-900">{order.name || 'Not provided'}</span>
-                        <span className="text-[10px] text-brand-400 truncate max-w-[150px]">{order.phone} • {order.address}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col space-y-1">
-                        {order.items?.map((item, idx) => (
-                          <div key={idx} className="flex flex-col text-[10px] border-b border-brand-50 py-1 last:border-0">
-                            <span className="font-bold text-brand-800">{item.name}</span>
-                            <div className="flex justify-between items-center">
-                              <span className="text-orange-600 font-bold uppercase">{item.size}</span>
-                              <span className="text-brand-500 font-medium">x{item.quantity || (item as any).qty || 0}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-brand-900">₹{order.total}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        order.orderStatus === 'delivered' ? 'bg-green-100 text-green-700' :
-                        order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                        order.orderStatus === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {order.orderStatus}
-                      </span>
-                    </td>
-                     <td className="px-6 py-4 text-right space-x-2">
-                        <button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             setSelectedOrder(order);
-                           }}
-                           className="p-2 bg-brand-50 text-brand-600 rounded-xl hover:bg-brand-600 hover:text-white transition-all shadow-sm"
-                         >
-                           <Edit2 size={18} />
-                         </button>
-                         <button
-                           onClick={(e) => handleDeleteOrder(e, order.id)}
-                           className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm"
-                         >
-                           <Trash2 size={18} />
-                         </button>
-                     </td>
-
+          <div className="bg-white rounded-[2rem] border border-brand-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-brand-50 text-brand-900 font-bold border-b border-brand-100">
+                  <tr>
+                    <th className="px-6 py-5">Order ID</th>
+                    <th className="px-6 py-5">Customer</th>
+                    <th className="px-6 py-5">Items</th>
+                    <th className="px-6 py-5">Total</th>
+                    <th className="px-6 py-5">Status</th>
+                    <th className="px-6 py-5 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-brand-50">
+                  {orders.map((order) => (
+                    <tr 
+                      key={order.id} 
+                      onClick={() => setSelectedOrder(order)}
+                      className="hover:bg-brand-50/30 transition-colors cursor-pointer group"
+                    >
+                      <td className="px-6 py-5 font-black text-brand-600 tracking-tighter">#{order.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-brand-900">{order.name || 'Not provided'}</span>
+                          <span className="text-[10px] text-brand-400 font-medium">{order.phone}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col space-y-1">
+                          {order.items?.map((item, idx) => (
+                            <div key={idx} className="flex flex-col text-[10px] py-1 border-b border-brand-50 last:border-0">
+                              <span className="font-bold text-brand-800">{item.name}</span>
+                              <div className="flex justify-between items-center text-brand-500">
+                                <span className="uppercase font-black text-orange-600">{item.size}</span>
+                                <span className="font-medium">x{item.quantity || (item as any).qty || 0}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 font-black text-brand-900 text-lg">₹{order.totalPrice || order.total}</td>
+                      <td className="px-6 py-5">
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                          order.orderStatus === 'delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                          order.orderStatus === 'shipped' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                          order.orderStatus === 'processing' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                          order.orderStatus === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                          'bg-orange-50 text-orange-700 border-orange-100'
+                        }`}>
+                          {order.orderStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right space-x-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedOrder(order);
+                            }}
+                            className="p-3 bg-brand-50 text-brand-600 rounded-xl hover:bg-brand-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteOrder(e, order.id)}
+                            className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-serif font-bold text-brand-900">Customer Management</h2>
+            <div className="bg-brand-50 px-4 py-2 rounded-xl text-brand-600 font-bold text-sm">
+              {users.length} Registered Users
+            </div>
+          </div>
+          <div className="bg-white rounded-[2rem] border border-brand-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-brand-50 text-brand-900 font-bold border-b border-brand-100">
+                  <tr>
+                    <th className="px-6 py-5">Name</th>
+                    <th className="px-6 py-5">Email</th>
+                    <th className="px-6 py-5">Role</th>
+                    <th className="px-6 py-5">Phone</th>
+                    <th className="px-6 py-5">Address</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-brand-50">
+                  {users.map((user, idx) => (
+                    <tr key={idx} className="hover:bg-brand-50/30 transition-colors">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center font-bold text-xs">
+                            {user.name?.charAt(0) || 'U'}
+                          </div>
+                          <span className="font-bold text-brand-900">{user.name || 'Anonymous'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-brand-600 font-medium">{user.email}</td>
+                      <td className="px-6 py-5">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${user.role === 'admin' ? 'bg-sky-100 text-sky-700' : 'bg-brand-100 text-brand-700'}`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-brand-500 font-medium">{user.phone || 'N/A'}</td>
+                      <td className="px-6 py-5 text-brand-500 text-sm truncate max-w-xs">{user.address || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -527,7 +635,7 @@ const AdminPanel: React.FC = () => {
                       className="w-full p-4 bg-brand-50 border border-brand-100 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 font-bold text-brand-900 appearance-none cursor-pointer"
                     >
                       <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
+                      <option value="processing">Processing</option>
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>
                     </select>
@@ -607,13 +715,13 @@ const AdminPanel: React.FC = () => {
                 setEditingProduct(null);
                 setNewProduct({
                   name: '',
-                  category: 'Veg',
+                  category: 'veg',
                   description: '',
                   image: '',
                   sizes: [
-                    { label: '250g', price: 0 },
-                    { label: '500g', price: 0 },
-                    { label: '1kg', price: 0 }
+                    { label: '200g', price: 0 },
+                    { label: '400g', price: 0 },
+                    { label: '900g', price: 0 }
                   ]
                 });
               }} 

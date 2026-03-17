@@ -36,8 +36,25 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsubscribe();
   }, []);
 
+  const refreshProducts = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, 'products'));
+      const productsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        image: doc.data().image || ""
+      })) as Product[];
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error refreshing products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <ProductContext.Provider value={{ products, loading, refreshProducts: async () => {} }}>
+    <ProductContext.Provider value={{ products, loading, refreshProducts }}>
       {children}
     </ProductContext.Provider>
   );

@@ -53,6 +53,23 @@ const Home: React.FC = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Floating Badge */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, rotate: -20 }}
+          animate={{ opacity: 1, scale: 1, rotate: 12 }}
+          transition={{ delay: 0.8, duration: 1, type: "spring" }}
+          className="absolute right-[10%] top-1/4 hidden lg:block z-20"
+        >
+          <div className="relative group">
+            <div className="absolute inset-0 bg-brand-400/20 blur-3xl rounded-full group-hover:bg-brand-400/30 transition-colors" />
+            <img 
+              src="/badge.svg" 
+              alt="Quality Badge" 
+              className="w-48 h-48 md:w-64 md:h-64 object-contain animate-float drop-shadow-2xl relative z-10" 
+            />
+          </div>
+        </motion.div>
       </section>
 
       {/* Features */}

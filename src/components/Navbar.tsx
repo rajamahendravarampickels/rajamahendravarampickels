@@ -21,7 +21,8 @@ const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-brand-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-3">
+            <img src="/badge.svg" alt="Badge" className="h-10 w-10 object-contain drop-shadow-sm" />
             <span className="text-xl sm:text-2xl font-serif font-bold text-brand-700">Rajamahendravaram Pickles</span>
           </Link>
 
