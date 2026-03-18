@@ -21,9 +21,16 @@ const AdminPanel: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users' | 'settings'>('products');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [settings, setSettings] = useState({
+    heroTitle: 'Authentic Taste of Tradition',
+    heroSubtitle: 'Handcrafted homemade pickles made with premium ingredients and age-old family recipes. No preservatives, just pure love.',
+    siteEmail: 'rajamahendravarampickels@gmail.com',
+    sitePhone: '+91 ••••• •••••',
+    siteAddress: 'Rajamahendravaram, Andhra Pradesh'
+  });
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -34,9 +41,9 @@ const AdminPanel: React.FC = () => {
     description: '',
     image: '',
     sizes: [
-      { label: '250g', price: 0 },
-      { label: '500g', price: 0 },
-      { label: '1kg', price: 0 }
+      { label: '200g', price: 0 },
+      { label: '400g', price: 0 },
+      { label: '900g', price: 0 }
     ]
   });
 
