@@ -50,6 +50,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.category}
           </span>
         </div>
+        {product.isSoldOut && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex items-center justify-center">
+            <span className="bg-red-600 text-white px-6 py-2 rounded-full font-black uppercase tracking-tighter shadow-xl transform -rotate-12 border-2 border-white scale-125">
+              Sold Out
+            </span>
+          </div>
+        )}
         {/* Subtle overlay glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
@@ -87,7 +94,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           </div>
 
-          <span className="text-xl font-black text-gray-900 block">₹{selectedSize.price}</span>
+          <div className="flex justify-between items-end">
+            <span className="text-xl font-black text-gray-900 block">₹{selectedSize.price}</span>
+            {product.stock > 0 && !product.isSoldOut && (
+              <span className="text-[10px] font-bold text-orange-600 animate-pulse bg-orange-50 px-2 py-1 rounded-md mb-1">
+                Only {product.stock} left
+              </span>
+            )}
+          </div>
           
           {/* Quantity Selector - Below Price, Above Button */}
           <div className="flex items-center space-x-3">
@@ -118,15 +132,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           <div className="flex justify-end">
             <button
+              disabled={product.isSoldOut}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (product.isSoldOut) return;
                 addToCart(product, selectedSize.label, selectedSize.price, qty);
               }}
-              className="flex items-center space-x-1.5 bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-orange-700 hover:shadow-lg hover:shadow-orange-200 transition-all duration-300 active:scale-95 shadow-sm"
+              className={`flex items-center space-x-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 active:scale-95 shadow-sm ${
+                product.isSoldOut 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed grayscale' 
+                  : 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-lg hover:shadow-orange-200'
+              }`}
             >
               <ShoppingCart size={16} />
-              <span>Add</span>
+              <span>{product.isSoldOut ? 'Sold Out' : 'Add'}</span>
             </button>
           </div>
         </div>

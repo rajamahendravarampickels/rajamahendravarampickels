@@ -44,7 +44,9 @@ const AdminPanel: React.FC = () => {
       { label: '200g', price: 0 },
       { label: '400g', price: 0 },
       { label: '900g', price: 0 }
-    ]
+    ],
+    stock: 0,
+    isSoldOut: false
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +113,8 @@ const AdminPanel: React.FC = () => {
         description: newProduct.description,
         image: newProduct.image,
         sizes: newProduct.sizes,
+        stock: newProduct.stock,
+        isSoldOut: newProduct.stock === 0 ? true : newProduct.isSoldOut,
       };
 
       if (editingProduct) {
@@ -132,7 +136,9 @@ const AdminPanel: React.FC = () => {
           { label: '250g', price: 0 },
           { label: '500g', price: 0 },
           { label: '1kg', price: 0 }
-        ]
+        ],
+        stock: 0,
+        isSoldOut: false
       });
     } catch (error) {
       toast.error(editingProduct ? 'Failed to update product' : 'Failed to add product');
@@ -150,7 +156,9 @@ const AdminPanel: React.FC = () => {
         { label: '250g', price: 0 },
         { label: '500g', price: 0 },
         { label: '1kg', price: 0 }
-      ]
+      ],
+      stock: product.stock || 0,
+      isSoldOut: product.isSoldOut || false
     });
     setShowAddModal(true);
   };
@@ -330,6 +338,7 @@ const AdminPanel: React.FC = () => {
                   <th className="px-6 py-4">Product</th>
                   <th className="px-6 py-4">Category</th>
                   <th className="px-6 py-4">Price</th>
+                  <th className="px-6 py-4">Stock</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -358,6 +367,11 @@ const AdminPanel: React.FC = () => {
                     <td className="px-6 py-4 text-brand-600">{product.category}</td>
                     <td className="px-6 py-4 font-bold text-brand-900">
                       {product.sizes && product.sizes.length > 0 ? `₹${product.sizes[0].price}+` : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${product.isSoldOut ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {product.isSoldOut ? 'Sold Out' : `${product.stock || 0} in stock`}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <button 
@@ -696,7 +710,9 @@ const AdminPanel: React.FC = () => {
                     { label: '250g', price: 0 },
                     { label: '500g', price: 0 },
                     { label: '1kg', price: 0 }
-                  ]
+                  ],
+                  stock: 0,
+                  isSoldOut: false
                 });
               }} 
               className="absolute top-8 right-8 text-brand-400 hover:text-brand-900"
@@ -729,6 +745,33 @@ const AdminPanel: React.FC = () => {
                   <option value="nonveg">Non-Veg</option>
                   <option value="podi">Podi</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-brand-700 ml-2">Stock Quantity</label>
+                <input
+                  type="number"
+                  required
+                  value={newProduct.stock}
+                  onChange={(e) => setNewProduct({ ...newProduct, stock: Number(e.target.value) })}
+                  className="w-full px-4 py-3 bg-brand-50 border border-brand-100 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500"
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-brand-700 ml-2">Status</label>
+                <div 
+                  onClick={() => setNewProduct({ ...newProduct, isSoldOut: !newProduct.isSoldOut })}
+                  className={`w-full px-4 py-3 border-2 rounded-2xl cursor-pointer transition-all flex items-center justify-between ${
+                    newProduct.isSoldOut 
+                      ? 'bg-red-50 border-red-200 text-red-700' 
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  }`}
+                >
+                  <span className="font-bold">{newProduct.isSoldOut ? 'Sold Out' : 'In Stock'}</span>
+                  {newProduct.isSoldOut ? <X size={20} /> : <Check size={20} />}
+                </div>
               </div>
               
               <div className="md:col-span-2 space-y-4">

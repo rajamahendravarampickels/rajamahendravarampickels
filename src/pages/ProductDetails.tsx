@@ -113,6 +113,14 @@ const ProductDetails: React.FC = () => {
           <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-brand-700 font-bold text-sm shadow-sm">
             {product.category}
           </div>
+          {product.isSoldOut && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-md z-20 flex flex-col items-center justify-center p-8 text-center uppercase tracking-tighter">
+              <span className="bg-red-600 text-white px-10 py-4 rounded-full font-black text-2xl shadow-2xl border-4 border-white mb-4 animate-bounce">
+                Sold Out
+              </span>
+              <p className="text-red-700 font-black text-xs tracking-[0.3em]">Restocking Soon</p>
+            </div>
+          )}
         </motion.div>
 
         <div className="space-y-8">
@@ -122,7 +130,14 @@ const ProductDetails: React.FC = () => {
               <span className="text-brand-500 text-sm ml-2">(48 Reviews)</span>
             </div>
             <h1 className="text-5xl font-serif font-bold text-brand-900 mb-4">{product.name}</h1>
-            <p className="text-3xl font-bold text-brand-600">₹{selectedSize.price}</p>
+            <div className="flex items-center gap-6">
+              <p className="text-3xl font-bold text-brand-600">₹{selectedSize.price}</p>
+              {product.stock > 0 && !product.isSoldOut && (
+                <span className="bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl animate-pulse border border-orange-100 italic">
+                  Only {product.stock} pieces left!
+                </span>
+              )}
+            </div>
           </div>
 
           <p className="text-brand-600 leading-relaxed text-lg">
@@ -153,8 +168,9 @@ const ProductDetails: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-6">
-              <div className="flex items-center bg-brand-50 rounded-2xl p-2 border border-brand-100">
+              <div className={`flex items-center bg-brand-50 rounded-2xl p-2 border border-brand-100 ${product.isSoldOut ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                 <button
+                  disabled={product.isSoldOut}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-xl transition-colors text-brand-900 font-bold"
                 >
@@ -162,6 +178,7 @@ const ProductDetails: React.FC = () => {
                 </button>
                 <span className="w-12 text-center font-bold text-brand-900 text-lg">{quantity}</span>
                 <button
+                  disabled={product.isSoldOut}
                   onClick={() => setQuantity(quantity + 1)}
                   className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-xl transition-colors text-brand-900 font-bold"
                 >
@@ -169,20 +186,31 @@ const ProductDetails: React.FC = () => {
                 </button>
               </div>
               <button
+                disabled={product.isSoldOut}
                 onClick={handleAddToCart}
-                className="flex-1 bg-brand-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-brand-700 transition-all flex items-center justify-center shadow-lg shadow-brand-600/20"
+                className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center shadow-lg ${
+                  product.isSoldOut 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' 
+                    : 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-600/20'
+                }`}
               >
                 <ShoppingCart size={24} className="mr-2" />
-                Add to Cart
+                {product.isSoldOut ? 'Sold Out' : 'Add to Cart'}
               </button>
             </div>
 
             <button
+              disabled={product.isSoldOut}
               onClick={() => {
+                if (product.isSoldOut) return;
                 handleAddToCart();
                 navigate('/cart');
               }}
-              className="w-full bg-brand-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all"
+              className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
+                product.isSoldOut 
+                  ? 'bg-gray-50 text-gray-300 cursor-not-allowed hidden' 
+                  : 'bg-brand-900 text-white hover:bg-black'
+              }`}
             >
               Buy It Now
             </button>

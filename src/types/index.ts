@@ -10,6 +10,8 @@ export interface Product {
   image: string;
   description: string;
   sizes: ProductSize[];
+  stock: number;
+  isSoldOut: boolean;
 }
 
 export interface UserProfile {
