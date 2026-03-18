@@ -21,7 +21,7 @@ const newNonVegPickles = [
   { name: "Kodi Mamsam Pachadi B/L", prices: [343, 748, 1486], image: "/images/products/chicken-pickle.jpg" },
   { name: "Meka Mamsam Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/mutton-pickle.jpg" },
   { name: "Royyalu Pachadi", prices: [487, 946, 1792], image: "/images/products/prawn-pickle.jpg" },
-  { name: "Gongura Kodi Mamsam Pachadi B/C", prices: [343, 748, 1486], image: "/images/products/gongura-chicken.jpg" },
+  { name: "Gongura Kodi Mamsam Pachadi B/L", prices: [343, 748, 1486], image: "/images/products/gongura-chicken.jpg" },
   { name: "Gongura Mekamamsam Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/gongura-mutton.jpg" },
   { name: "Gongura Royyalu", prices: [487, 946, 1792], image: "/images/products/gongura-prawns.jpg" },
   { name: "Chapala Pachadi B/L", prices: [487, 946, 1792], image: "/images/products/fish-pickle.jpg" }

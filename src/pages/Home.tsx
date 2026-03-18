@@ -12,7 +12,7 @@ const Home: React.FC = () => {
 
   const categories = [
     { name: 'veg', label: 'Veg', icon: '🥗', count: featuredProducts.filter(p => p.category === 'veg').length },
-    { name: 'nonveg', label: 'Non-Veg', icon: '🍖', count: featuredProducts.filter(p => p.category === 'nonveg').length },
+    { name: 'nonveg', label: 'Non-Veg', icon: '/images/non-veg-logo.jpeg', count: featuredProducts.filter(p => p.category === 'nonveg').length },
     { name: 'podi', label: 'Podis', icon: '🌶️', count: featuredProducts.filter(p => p.category === 'podi').length },
   ];
 
@@ -63,10 +63,10 @@ const Home: React.FC = () => {
         >
           <div className="relative group">
             <div className="absolute inset-0 bg-brand-400/20 blur-3xl rounded-full group-hover:bg-brand-400/30 transition-colors" />
-            <img 
-              src="/badge.svg" 
-              alt="Quality Badge" 
-              className="w-48 h-48 md:w-64 md:h-64 object-contain animate-float drop-shadow-2xl relative z-10" 
+            <img
+              src="/badge.svg"
+              alt="Quality Badge"
+              className="w-48 h-48 md:w-64 md:h-64 object-contain animate-float drop-shadow-2xl relative z-10"
             />
           </div>
         </motion.div>
@@ -117,7 +117,13 @@ const Home: React.FC = () => {
               to={`/products?category=${cat.name}`}
               className="group bg-white p-8 rounded-3xl border border-brand-100 shadow-sm hover:bg-brand-600 transition-all duration-500 text-center"
             >
-              <span className="text-5xl mb-4 block group-hover:scale-110 transition-transform">{cat.icon}</span>
+              <span className="text-5xl mb-4 block group-hover:scale-110 transition-transform h-16 flex items-center justify-center">
+                {cat.icon.startsWith('/') ? (
+                  <img src={cat.icon} alt={cat.label} className="w-16 h-16 object-contain" />
+                ) : (
+                  cat.icon
+                )}
+              </span>
               <h3 className="font-bold text-xl text-brand-900 group-hover:text-white mb-1 uppercase tracking-wider">{cat.label}</h3>
               <p className="text-brand-500 group-hover:text-brand-100 text-sm">{cat.count} Products</p>
             </Link>
