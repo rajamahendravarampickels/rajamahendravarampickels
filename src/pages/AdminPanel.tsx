@@ -173,17 +173,14 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
+  const updateOrderStatus = async (orderId: string, updates: any) => {
     try {
-      const updates: any = { orderStatus: status };
-      if (status === 'confirmed') {
-        updates.paymentStatus = 'confirmed';
-      }
       await updateDoc(doc(db, 'orders', orderId), updates);
       if (selectedOrder?.id === orderId) {
         setSelectedOrder(prev => prev ? { ...prev, ...updates } : null);
       }
-      toast.success(`Order marked as ${status}`);
+      const statusLabel = updates.orderStatus || updates.paymentStatus || 'updated';
+      toast.success(`Order marked as ${statusLabel}`);
     } catch (error) {
       toast.error('Failed to update status');
     }
@@ -421,6 +418,7 @@ const AdminPanel: React.FC = () => {
                     <th className="px-6 py-5">Customer</th>
                     <th className="px-6 py-5">Items</th>
                     <th className="px-6 py-5">Total</th>
+                    <th className="px-6 py-5">Payment</th>
                     <th className="px-6 py-5">Status</th>
                     <th className="px-6 py-5 text-right">Actions</th>
                   </tr>
@@ -453,6 +451,14 @@ const AdminPanel: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-5 font-black text-brand-900 text-lg">₹{order.totalPrice || order.total}</td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-brand-400 uppercase tracking-widest mb-1">{order.paymentMethod}</span>
+                          <span className={`text-[10px] font-bold ${order.paymentStatus === 'confirmed' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {order.paymentStatus?.toUpperCase() || 'PENDING'}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-6 py-5">
                         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                           order.orderStatus === 'delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
@@ -615,22 +621,39 @@ const AdminPanel: React.FC = () => {
 
                 {/* Status Update */}
                 <div className="space-y-4">
-                  <h3 className="text-xs font-black uppercase text-brand-300 tracking-widest">Update Order Status</h3>
-                  <div className="space-y-3">
-                    <select 
-                      value={selectedOrder.orderStatus}
-                      onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
-                      className="w-full p-4 bg-brand-50 border border-brand-100 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 font-bold text-brand-900 appearance-none cursor-pointer"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                    </select>
-                    <div className="flex items-center justify-center p-3 bg-brand-50 font-bold text-xs text-brand-500 rounded-xl italic">
-                      Current: {selectedOrder.orderStatus.toUpperCase()}
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase text-brand-300">Quick Actions</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        <button 
+                          onClick={() => updateOrderStatus(selectedOrder.id, { paymentStatus: 'confirmed', orderStatus: 'processing' })}
+                          className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all border border-emerald-100 text-left"
+                        >
+                          Confirm Payment
+                        </button>
+                        <button 
+                          onClick={() => updateOrderStatus(selectedOrder.id, { orderStatus: 'shipped' })}
+                          className="px-4 py-2.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs hover:bg-blue-100 transition-all border border-blue-100 text-left"
+                        >
+                          Mark as Shipped
+                        </button>
+                        <button 
+                          onClick={() => updateOrderStatus(selectedOrder.id, { orderStatus: 'delivered' })}
+                          className="px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-bold text-xs hover:bg-green-100 transition-all border border-green-100 text-left"
+                        >
+                          Mark as Delivered
+                        </button>
+                      </div>
+                      <select 
+                        value={selectedOrder.orderStatus}
+                        onChange={(e) => updateOrderStatus(selectedOrder.id, { orderStatus: e.target.value })}
+                        className="w-full p-4 bg-brand-50 border border-brand-100 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 font-bold text-brand-900 appearance-none cursor-pointer mt-4"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                      </select>
                     </div>
-                  </div>
                 </div>
               </div>
 

@@ -13,6 +13,8 @@ const Checkout: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState('');
   const [formData, setFormData] = useState({
     name: profile?.name || '',
     phone: profile?.phone || '',
@@ -80,9 +82,11 @@ const Checkout: React.FC = () => {
         }, { merge: true });
       }
 
+      setPlacedOrderId(orderId);
+      setOrderPlaced(true);
       toast.success('Order placed successfully!');
       clearCart();
-      navigate('/orders');
+      // Keep user on page for WhatsApp step
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -93,8 +97,45 @@ const Checkout: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-brand-900 mb-8 sm:mb-12">Checkout</h1>
+      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-brand-900 mb-8 sm:mb-12">
+        {orderPlaced ? 'Order Confirmation' : 'Checkout'}
+      </h1>
 
+      {orderPlaced ? (
+        <div className="max-w-2xl mx-auto text-center bg-white p-8 sm:p-12 rounded-[2.5rem] border border-brand-100 shadow-xl shadow-brand-100/20">
+          <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8">
+            <CheckCircle size={48} />
+          </div>
+          <h2 className="text-3xl font-serif font-bold text-brand-900 mb-4">Order Received!</h2>
+          <p className="text-brand-600 mb-8 text-lg font-medium">
+            Your order <strong>#{placedOrderId.slice(0, 8).toUpperCase()}</strong> has been saved. 
+            <br />
+            Please send your payment screenshot on WhatsApp to confirm your order.
+          </p>
+          
+          <div className="space-y-4">
+            <a 
+              href="https://wa.me/918884473734"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366] text-white py-5 rounded-2xl font-bold text-lg hover:bg-[#128C7E] transition-all flex items-center justify-center shadow-lg shadow-green-100"
+            >
+              <Phone className="mr-3" size={24} />
+              Send Screenshot on WhatsApp
+            </a>
+            <button
+              onClick={() => navigate('/orders')}
+              className="w-full bg-brand-50 text-brand-700 py-5 rounded-2xl font-bold text-lg hover:bg-brand-100 transition-all"
+            >
+              Go to My Orders
+            </button>
+          </div>
+          
+          <p className="mt-8 text-sm text-brand-400 font-medium italic">
+            Once verified, we will start processing your delicious order.
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -180,7 +221,7 @@ const Checkout: React.FC = () => {
                     </div>
                     <div className="bg-white/50 p-4 rounded-2xl border border-brand-100">
                       <p className="text-sm font-bold text-brand-900">Instructions:</p>
-                      <p className="text-sm text-brand-600">Scan QR and pay. After payment click Confirm Order.</p>
+                      <p className="text-sm text-brand-600">Scan QR and pay. After payment click "I have completed payment".</p>
                     </div>
                   </div>
                 </div>
@@ -225,11 +266,12 @@ const Checkout: React.FC = () => {
               disabled={loading}
               className="w-full bg-brand-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-brand-700 transition-all flex items-center justify-center disabled:opacity-50"
             >
-              {loading ? 'Confirming Order...' : 'Confirm Order'}
+              {loading ? 'Processing...' : 'I have completed payment'}
             </button>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

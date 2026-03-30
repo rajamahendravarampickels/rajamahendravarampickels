@@ -41,14 +41,16 @@ const MyOrders: React.FC = () => {
   }, [user]);
 
   const getPaymentStatusDisplay = (status: string) => {
-    if (status === 'pending') return 'Waiting for confirmation';
-    if (status === 'confirmed') return 'Payment confirmed';
+    if (status === 'pending') return 'Waiting for payment confirmation';
+    if (status === 'confirmed') return 'Payment Confirmed';
     return status;
   };
 
   const getOrderStatusDisplay = (status: string) => {
     if (status === 'shipped') return 'Shipped';
     if (status === 'delivered') return 'Delivered';
+    if (status === 'processing') return 'Processing';
+    if (status === 'pending') return 'Pending Verification';
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
