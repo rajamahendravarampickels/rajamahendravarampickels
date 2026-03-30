@@ -23,7 +23,14 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-bold mb-6 uppercase tracking-wider">Quick Links</h4>
             <ul className="space-y-3 text-brand-200 text-sm">
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+              <li>
+                <button 
+                  onClick={() => window.open("https://wa.me/918884473734?text=Hi%2C%20I%20need%20help%20regarding%20your%20products", "_blank")}
+                  className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left font-inherit"
+                >
+                  Contact Us
+                </button>
+              </li>
             </ul>
           </div>
 

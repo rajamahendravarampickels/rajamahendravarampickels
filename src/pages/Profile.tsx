@@ -215,7 +215,10 @@ const Profile: React.FC = () => {
               </div>
               <h4 className="text-xl font-bold mb-2">Need help?</h4>
               <p className="text-emerald-200 text-sm mb-6">Our authentic Rajamahendravaram team is here for you 24/7.</p>
-              <button className="bg-white text-emerald-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-xl">
+              <button 
+                onClick={() => window.open("https://wa.me/918884473734?text=Hi%2C%20I%20need%20help%20regarding%20your%20products", "_blank")}
+                className="bg-white text-emerald-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-xl"
+              >
                 Contact Support
               </button>
             </div>
